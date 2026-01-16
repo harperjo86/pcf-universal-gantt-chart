@@ -13,16 +13,26 @@ export type FilterColumnInfo = {
 
 export const FilterHeader: React.FunctionComponent<{
   filterColumns?: FilterColumnInfo[];
-  onFilterChange: (filterValues: { [fieldName: string]: string }) => void;
+  onFilterChange: (filterValues: { [fieldName: string]: string[] }) => void;
 }> = ({ filterColumns, onFilterChange }) => {
   const [selectedFilters, setSelectedFilters] = React.useState<{
-    [fieldName: string]: string;
+    [fieldName: string]: string[];
   }>({});
+  const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
 
-  const handleFilterChange = (fieldName: string, value: string) => {
+  const handleCheckboxChange = (fieldName: string, value: string, checked: boolean) => {
+    const currentValues = selectedFilters[fieldName] || [];
+    let newValues: string[];
+    
+    if (checked) {
+      newValues = [...currentValues, value];
+    } else {
+      newValues = currentValues.filter((v) => v !== value);
+    }
+    
     const newFilters = {
       ...selectedFilters,
-      [fieldName]: value,
+      [fieldName]: newValues,
     };
     setSelectedFilters(newFilters);
     onFilterChange(newFilters);
@@ -45,7 +55,7 @@ export const FilterHeader: React.FunctionComponent<{
         padding: "12px",
         backgroundColor: "#f5f5f5",
         borderBottom: "1px solid #e0e0e0",
-        alignItems: "center",
+        alignItems: "flex-start",
         flexWrap: "wrap",
       }}
     >
@@ -56,6 +66,7 @@ export const FilterHeader: React.FunctionComponent<{
             display: "flex",
             flexDirection: "column",
             gap: "4px",
+            position: "relative",
           }}
         >
           <label
@@ -67,9 +78,12 @@ export const FilterHeader: React.FunctionComponent<{
           >
             {col.name}
           </label>
-          <select
-            value={selectedFilters[col.fieldName] || ""}
-            onChange={(e) => handleFilterChange(col.fieldName, e.target.value)}
+          <button
+            onClick={() =>
+              setOpenDropdown(
+                openDropdown === col.fieldName ? null : col.fieldName
+              )
+            }
             style={{
               padding: "6px 8px",
               borderRadius: "4px",
@@ -77,18 +91,66 @@ export const FilterHeader: React.FunctionComponent<{
               fontSize: "13px",
               minWidth: "150px",
               cursor: "pointer",
+              backgroundColor: "white",
+              textAlign: "left",
             }}
           >
-            <option value="">All</option>
-            {col.distinctValues.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            {(selectedFilters[col.fieldName]?.length || 0) > 0
+              ? `${selectedFilters[col.fieldName].length} selected`
+              : "All"}
+          </button>
+          {openDropdown === col.fieldName && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                backgroundColor: "white",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                zIndex: 1000,
+                minWidth: "150px",
+                maxHeight: "250px",
+                overflowY: "auto",
+                marginTop: "4px",
+              }}
+            >
+              {col.distinctValues.map((opt) => (
+                <label
+                  key={opt.value}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #f0f0f0",
+                    fontSize: "13px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedFilters[col.fieldName]?.includes(opt.value) || false
+                    }
+                    onChange={(e) =>
+                      handleCheckboxChange(col.fieldName, opt.value, e.target.checked)
+                    }
+                    style={{
+                      marginRight: "8px",
+                      cursor: "pointer",
+                    }}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       ))}
-      {Object.keys(selectedFilters).some((key) => selectedFilters[key]) && (
+      {Object.keys(selectedFilters).some(
+        (key) => (selectedFilters[key]?.length || 0) > 0
+      ) && (
         <button
           onClick={handleClearFilters}
           style={{

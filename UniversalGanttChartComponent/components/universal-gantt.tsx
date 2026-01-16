@@ -52,27 +52,31 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
   debugger;
   const [view, setView] = React.useState(props.viewMode);
   const [filteredTasks, setFilteredTasks] = React.useState<Task[]>(props.tasks);
-  const [activeFilters, setActiveFilters] = React.useState<{ [fieldName: string]: string }>({});
+  const [activeFilters, setActiveFilters] = React.useState<{ [fieldName: string]: string[] }>({});
   const { context } = props;
 
-  // Handle filter changes
-  const handleFilterChange = (filterValues: { [fieldName: string]: string }) => {
+  // Handle filter changes with multi-select support
+  // Logic: OR within each filter (show if ANY selected value matches), AND between filters (must match all active filters)
+  const handleFilterChange = (filterValues: { [fieldName: string]: string[] }) => {
     setActiveFilters(filterValues);
 
     // Filter tasks based on selected filter values
     let filtered = props.tasks;
-    const hasActiveFilters = Object.values(filterValues).some((val) => val !== "");
+    const hasActiveFilters = Object.values(filterValues).some((vals) => vals && vals.length > 0);
 
     if (hasActiveFilters) {
       filtered = props.tasks.filter((task) => {
         const record = context.parameters.entityDataSet.records[task.id];
         if (!record) return false;
 
-        // Check if record matches all active filters
-        return Object.entries(filterValues).every(([fieldName, filterValue]) => {
-          if (!filterValue) return true; // "All" is selected, so match all records
-          const recordValue = record.getValue(fieldName);
-          return String(recordValue) === filterValue;
+        // Check if record matches ALL active filters (AND logic between filters)
+        // Within each filter, match ANY selected value (OR logic within filter)
+        return Object.entries(filterValues).every(([fieldName, filterValues]) => {
+          if (!filterValues || filterValues.length === 0) return true; // No filter active for this field
+          
+          const recordValue = String(record.getValue(fieldName));
+          // Match if record value is in ANY of the selected values for this filter (OR logic)
+          return filterValues.some((val) => val === recordValue);
         });
       });
     }
