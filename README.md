@@ -1,6 +1,7 @@
 # pcf-universal-gantt-chart
 
-## Interactive PCF Gantt Chart Control for Dynamics Grid and Canvas App
+## Interactive PCF Gantt Chart Control for Scheduling Future Maintenance work
+## Based on the previouse work of https://github.com/MaTeMaTuK/pcf-universal-gantt-chart
 
 ![example](https://github.com/MaTeMaTuK/pcf-universal-gantt-chart/blob/master/DocumentationAssets/ganttStandard.gif)
 
