@@ -100,11 +100,12 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
-      // Update local state immediately for the dragged task to show change instantly
+      // Update local state immediately for the dragged task
       setFilteredTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === task.id ? task : t))
       );
-      // Refresh dataset - this will pick up any cascading plugin changes
+      // Add a small delay to ensure Dataverse plugin changes complete before refresh
+      await new Promise((resolve) => setTimeout(resolve, 500));
       context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
@@ -127,11 +128,12 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
-      // Update local state immediately for the updated task to show change instantly
+      // Update local state immediately for the updated task
       setFilteredTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === task.id ? task : t))
       );
-      // Refresh dataset to pick up any plugin changes
+      // Add a small delay to ensure Dataverse plugin changes complete before refresh
+      await new Promise((resolve) => setTimeout(resolve, 500));
       context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
