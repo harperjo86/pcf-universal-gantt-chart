@@ -55,6 +55,30 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
   const [activeFilters, setActiveFilters] = React.useState<{ [fieldName: string]: string[] }>({});
   const { context } = props;
 
+  // Sync parent tasks to local state whenever props change
+  // This ensures updates from Dataverse (after refresh) update the local state
+  React.useEffect(() => {
+    // Re-apply filters when tasks are updated
+    const hasActiveFilters = Object.values(activeFilters).some((vals) => vals && vals.length > 0);
+
+    if (hasActiveFilters) {
+      const filtered = props.tasks.filter((task) => {
+        const record = context.parameters.entityDataSet.records[task.id];
+        if (!record) return false;
+
+        return Object.entries(activeFilters).every(([fieldName, filterValues]) => {
+          if (!filterValues || filterValues.length === 0) return true;
+          
+          const recordValue = String(record.getValue(fieldName));
+          return filterValues.some((val) => val === recordValue);
+        });
+      });
+      setFilteredTasks(filtered);
+    } else {
+      setFilteredTasks(props.tasks);
+    }
+  }, [props.tasks]);
+
   // Handle filter changes with multi-select support
   // Logic: OR within each filter (show if ANY selected value matches), AND between filters (must match all active filters)
   const handleFilterChange = (filterValues: { [fieldName: string]: string[] }) => {
