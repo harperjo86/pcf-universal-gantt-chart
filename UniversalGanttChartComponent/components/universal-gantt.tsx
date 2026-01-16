@@ -51,61 +51,37 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
 ) => {
   debugger;
   const [view, setView] = React.useState(props.viewMode);
-  const [filteredTasks, setFilteredTasks] = React.useState<Task[]>(props.tasks);
   const [activeFilters, setActiveFilters] = React.useState<{ [fieldName: string]: string[] }>({});
   const { context } = props;
 
-  // Sync parent tasks to local state whenever props change
-  // This ensures updates from Dataverse (after refresh) update the local state
-  React.useEffect(() => {
-    // Re-apply filters when tasks are updated
+  // Calculate filtered tasks based on active filters
+  // If no filters, use all tasks directly from props
+  const getFilteredTasks = () => {
     const hasActiveFilters = Object.values(activeFilters).some((vals) => vals && vals.length > 0);
-
-    if (hasActiveFilters) {
-      const filtered = props.tasks.filter((task) => {
-        const record = context.parameters.entityDataSet.records[task.id];
-        if (!record) return false;
-
-        return Object.entries(activeFilters).every(([fieldName, filterValues]) => {
-          if (!filterValues || filterValues.length === 0) return true;
-          
-          const recordValue = String(record.getValue(fieldName));
-          return filterValues.some((val) => val === recordValue);
-        });
-      });
-      setFilteredTasks(filtered);
-    } else {
-      setFilteredTasks(props.tasks);
+    
+    if (!hasActiveFilters) {
+      return props.tasks;
     }
-  }, [props.tasks]);
+
+    return props.tasks.filter((task) => {
+      const record = context.parameters.entityDataSet.records[task.id];
+      if (!record) return false;
+
+      return Object.entries(activeFilters).every(([fieldName, filterValues]) => {
+        if (!filterValues || filterValues.length === 0) return true;
+        
+        const recordValue = String(record.getValue(fieldName));
+        return filterValues.some((val) => val === recordValue);
+      });
+    });
+  };
+
+  const filteredTasks = getFilteredTasks();
 
   // Handle filter changes with multi-select support
   // Logic: OR within each filter (show if ANY selected value matches), AND between filters (must match all active filters)
   const handleFilterChange = (filterValues: { [fieldName: string]: string[] }) => {
     setActiveFilters(filterValues);
-
-    // Filter tasks based on selected filter values
-    let filtered = props.tasks;
-    const hasActiveFilters = Object.values(filterValues).some((vals) => vals && vals.length > 0);
-
-    if (hasActiveFilters) {
-      filtered = props.tasks.filter((task) => {
-        const record = context.parameters.entityDataSet.records[task.id];
-        if (!record) return false;
-
-        // Check if record matches ALL active filters (AND logic between filters)
-        // Within each filter, match ANY selected value (OR logic within filter)
-        return Object.entries(filterValues).every(([fieldName, filterValues]) => {
-          if (!filterValues || filterValues.length === 0) return true; // No filter active for this field
-          
-          const recordValue = String(record.getValue(fieldName));
-          // Match if record value is in ANY of the selected values for this filter (OR logic)
-          return filterValues.some((val) => val === recordValue);
-        });
-      });
-    }
-
-    setFilteredTasks(filtered);
   };
 
   // Events
@@ -124,13 +100,6 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
-      // Update local state immediately for the dragged task
-      setFilteredTasks((prevTasks) =>
-        prevTasks.map((t) => (t.id === task.id ? task : t))
-      );
-      // Add a small delay to ensure Dataverse plugin changes complete before refresh
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -139,6 +108,7 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
+    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
@@ -152,13 +122,6 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
-      // Update local state immediately for the updated task
-      setFilteredTasks((prevTasks) =>
-        prevTasks.map((t) => (t.id === task.id ? task : t))
-      );
-      // Add a small delay to ensure Dataverse plugin changes complete before refresh
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -167,6 +130,7 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
+    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
