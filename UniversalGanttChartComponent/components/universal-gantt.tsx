@@ -13,6 +13,7 @@ import { ViewSwitcher } from "./view-switcher";
 import { IInputs } from "../generated/ManifestTypes";
 import { createTooltip } from "./gantt-tooltip";
 import { createTaskListLocal } from "./task-list-table";
+import { FilterHeader, FilterColumnInfo } from "./filter-header";
 import { isErrorDialogOptions } from "../helper";
 
 export type UniversalGanttProps = {
@@ -39,6 +40,8 @@ export type UniversalGanttProps = {
   columnWidthDay: number;
   columnWidthWeek: number;
   columnWidthMonth: number;
+  additionalColumns?: { name: string; fieldName: string }[];
+  filterColumns?: FilterColumnInfo[];
   onViewChange: (viewMode: ViewMode) => void;
   onExpanderStateChange: (itemId: string, expanderState: boolean) => void;
 } & EventOption &
@@ -48,7 +51,35 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
 ) => {
   debugger;
   const [view, setView] = React.useState(props.viewMode);
+  const [filteredTasks, setFilteredTasks] = React.useState<Task[]>(props.tasks);
+  const [activeFilters, setActiveFilters] = React.useState<{ [fieldName: string]: string }>({});
   const { context } = props;
+
+  // Handle filter changes
+  const handleFilterChange = (filterValues: { [fieldName: string]: string }) => {
+    setActiveFilters(filterValues);
+
+    // Filter tasks based on selected filter values
+    let filtered = props.tasks;
+    const hasActiveFilters = Object.values(filterValues).some((val) => val !== "");
+
+    if (hasActiveFilters) {
+      filtered = props.tasks.filter((task) => {
+        const record = context.parameters.entityDataSet.records[task.id];
+        if (!record) return false;
+
+        // Check if record matches all active filters
+        return Object.entries(filterValues).every(([fieldName, filterValue]) => {
+          if (!filterValue) return true; // "All" is selected, so match all records
+          const recordValue = record.getValue(fieldName);
+          return String(recordValue) === filterValue;
+        });
+      });
+    }
+
+    setFilteredTasks(filtered);
+  };
+
   // Events
   const handleDateChange = async (task: Task) => {
     const recordRef =
@@ -132,7 +163,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
     TaskListHeader: createHeaderLocal(
       props.recordDisplayName,
       props.startDisplayName,
-      props.endDisplayName
+      props.endDisplayName,
+      props.additionalColumns
     ),
     TooltipContent: createTooltip(
       props.startDisplayName,
@@ -146,7 +178,9 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
     TaskListTable: createTaskListLocal(
       props.includeTime,
       handleOpenRecord,
-      formatDateShort
+      formatDateShort,
+      props.context.parameters.entityDataSet,
+      props.additionalColumns
     ),
   };
 
@@ -173,6 +207,10 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
 
   return (
     <div className="Gantt-Wrapper">
+      <FilterHeader
+        filterColumns={props.filterColumns}
+        onFilterChange={handleFilterChange}
+      />
       <ViewSwitcher
         context={context}
         onViewChange={(viewMode) => {
@@ -183,6 +221,7 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       <Gantt
         {...props}
         {...options}
+        tasks={filteredTasks}
         viewMode={view}
         onDoubleClick={handleOpenRecord}
         onDateChange={handleDateChange}

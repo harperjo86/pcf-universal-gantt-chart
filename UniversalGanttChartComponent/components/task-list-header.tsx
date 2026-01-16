@@ -3,7 +3,8 @@ import * as React from "react";
 export const createHeaderLocal = (
   recordDisplayName: string,
   startDisplayName: string,
-  endDisplayName: string
+  endDisplayName: string,
+  additionalColumns?: { name: string; fieldName: string }[]
 ): React.FunctionComponent<{
   headerHeight: number;
   rowWidth: string;
@@ -71,6 +72,28 @@ export const createHeaderLocal = (
           >
             &nbsp;{endDisplayName}
           </div>
+          {/**
+           * Additional Column Headers
+           */}
+          {additionalColumns && additionalColumns.map((col) => (
+            <React.Fragment key={col.fieldName}>
+              <div
+                className="Gantt-Table_Header-Separator"
+                style={{
+                  height: headerHeight * 0.5,
+                  marginTop: headerHeight * 0.25,
+                }}
+              />
+              <div
+                className="Gantt-Table_Header-Item"
+                style={{
+                  minWidth: rowWidth,
+                }}
+              >
+                &nbsp;{col.name}
+              </div>
+            </React.Fragment>
+          ))}
         </div>
       </div>
     );

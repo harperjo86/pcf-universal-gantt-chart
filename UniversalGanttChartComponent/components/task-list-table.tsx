@@ -4,7 +4,9 @@ import { Task } from "gantt-task-react";
 export const createTaskListLocal = (
   includeTime: boolean,
   onClick: (task: Task) => void,
-  formatDateShort: (value: Date, includeTime?: boolean) => string
+  formatDateShort: (value: Date, includeTime?: boolean) => string,
+  dataset?: ComponentFramework.PropertyTypes.DataSet,
+  additionalColumns?: { name: string; fieldName: string }[]
 ): React.FunctionComponent<{
   rowHeight: number;
   rowWidth: string;
@@ -42,6 +44,19 @@ export const createTaskListLocal = (
           } else if (t.hideChildren === true) {
             expanderSymbol = "▶";
           }
+          
+          // Get additional column values for this task
+          const additionalValues: { [key: string]: string } = {};
+          if (dataset && additionalColumns) {
+            const record = dataset.records[t.id];
+            if (record) {
+              additionalColumns.forEach((col) => {
+                const value = record.getValue(col.fieldName);
+                additionalValues[col.fieldName] = value ? String(value) : "";
+              });
+            }
+          }
+          
           return (
             <div
               className="Gantt-Task-List_Row"
@@ -123,6 +138,22 @@ export const createTaskListLocal = (
               >
                 &nbsp;{formatDateShort(t.end, includeTime)}
               </div>
+              {/**
+               * Additional Columns
+               */}
+              {additionalColumns && additionalColumns.map((col) => (
+                <div
+                  key={`${t.id}-${col.fieldName}`}
+                  className="Gantt-Task-List_Cell"
+                  style={{
+                    minWidth: rowWidth,
+                    maxWidth: rowWidth,
+                  }}
+                  title={additionalValues[col.fieldName] || ""}
+                >
+                  &nbsp;{additionalValues[col.fieldName] || ""}
+                </div>
+              ))}
             </div>
           );
         })}

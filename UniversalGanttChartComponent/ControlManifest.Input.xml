@@ -36,6 +36,12 @@
         display-name-key="Display Color(Option)" description-key="Specifies record color by option value(hex code)" of-type="OptionSet" usage="input" required="false" />
       <property-set name="displayColorText" 
         display-name-key="Display Color(Text)" description-key="Specifies record color by text value(hex code)" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="column1" display-name-key="Additional Column 1" description-key="Optional additional column to display in task list" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="column2" display-name-key="Additional Column 2" description-key="Optional additional column to display in task list" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="column3" display-name-key="Additional Column 3" description-key="Optional additional column to display in task list" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="filterColumn1" display-name-key="Filter Column 1" description-key="Optional column for dropdown filter at top of control" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="filterColumn2" display-name-key="Filter Column 2" description-key="Optional column for dropdown filter at top of control" of-type="SingleLine.Text" usage="input" required="false" />
+      <property-set name="filterColumn3" display-name-key="Filter Column 3" description-key="Optional column for dropdown filter at top of control" of-type="SingleLine.Text" usage="input" required="false" />
     </data-set>
 
     <property name="displayMode" display-name-key="Display Mode" description-key="Parameter enables or disables progress and datetime controls" of-type="Enum" usage="input" required="true" default-value="editable">
@@ -91,6 +97,14 @@
     <property name="customBackgroundSelectedColor" display-name-key="Custom Background Selected Color" description-key="Defines Bar background color on select" of-type="SingleLine.Text" usage="input" required="false"/>
     <property name="customProgressColor" display-name-key="Custom Progress Color" description-key="Defines Bar progress color" of-type="SingleLine.Text" usage="input" required="false"/>
     <property name="customProgressSelectedColor" display-name-key="Custom Progress Selected Color" description-key="Defines Bar progress color on select" of-type="SingleLine.Text" usage="input" required="false"/>
+
+    <property name="customFilterLabel1" display-name-key="Custom Filter Label 1" description-key="Custom label for filter column 1" of-type="SingleLine.Text" usage="input" required="false"/>
+    <property name="customFilterLabel2" display-name-key="Custom Filter Label 2" description-key="Custom label for filter column 2" of-type="SingleLine.Text" usage="input" required="false"/>
+    <property name="customFilterLabel3" display-name-key="Custom Filter Label 3" description-key="Custom label for filter column 3" of-type="SingleLine.Text" usage="input" required="false"/>
+
+    <property name="customColumnHeader1" display-name-key="Custom Column Header 1" description-key="Custom header label for additional column 1" of-type="SingleLine.Text" usage="input" required="false"/>
+    <property name="customColumnHeader2" display-name-key="Custom Column Header 2" description-key="Custom header label for additional column 2" of-type="SingleLine.Text" usage="input" required="false"/>
+    <property name="customColumnHeader3" display-name-key="Custom Column Header 3" description-key="Custom header label for additional column 3" of-type="SingleLine.Text" usage="input" required="false"/>
 
     <resources>
       <code path="index.ts" order="1"/>

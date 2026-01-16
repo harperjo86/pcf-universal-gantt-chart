@@ -22,6 +22,12 @@ export class UniversalGanttChartComponent
   private _parentRecordStr = "parentRecord";
   private _displayColorText = "displayColorText";
   private _displayColorOption = "displayColorOption";
+  private _column1Str = "column1";
+  private _column2Str = "column2";
+  private _column3Str = "column3";
+  private _filterColumn1Str = "filterColumn1";
+  private _filterColumn2Str = "filterColumn2";
+  private _filterColumn3Str = "filterColumn3";
   private _dataSetName = "entityDataSet";
   private _defaultEntityColor = "#2975B2";
   private _defaultTaskType: TaskType = "task";
@@ -132,6 +138,56 @@ export class UniversalGanttChartComponent
 
       const fontSize = context.parameters.fontSize.raw || "14px";
       debugger;
+      
+      // Get custom labels
+      const customFilterLabel1 = context.parameters.customFilterLabel1.raw || "";
+      const customFilterLabel2 = context.parameters.customFilterLabel2.raw || "";
+      const customFilterLabel3 = context.parameters.customFilterLabel3.raw || "";
+      const customColumnHeader1 = context.parameters.customColumnHeader1.raw || "";
+      const customColumnHeader2 = context.parameters.customColumnHeader2.raw || "";
+      const customColumnHeader3 = context.parameters.customColumnHeader3.raw || "";
+      
+      // Build additional columns array
+      const additionalColumns: { name: string; fieldName: string }[] = [];
+      const col1Field = columns.find((c) => c.alias === this._column1Str);
+      const col2Field = columns.find((c) => c.alias === this._column2Str);
+      const col3Field = columns.find((c) => c.alias === this._column3Str);
+      
+      if (col1Field) additionalColumns.push({ name: customColumnHeader1 || col1Field.displayName, fieldName: col1Field.name });
+      if (col2Field) additionalColumns.push({ name: customColumnHeader2 || col2Field.displayName, fieldName: col2Field.name });
+      if (col3Field) additionalColumns.push({ name: customColumnHeader3 || col3Field.displayName, fieldName: col3Field.name });
+
+      // Build filter columns array with distinct values
+      const filterColumns: Array<{ name: string; fieldName: string; distinctValues: Array<{ label: string; value: string }> }> = [];
+      const filterCol1Field = columns.find((c) => c.alias === this._filterColumn1Str);
+      const filterCol2Field = columns.find((c) => c.alias === this._filterColumn2Str);
+      const filterCol3Field = columns.find((c) => c.alias === this._filterColumn3Str);
+
+      if (filterCol1Field) {
+        const distinctValues = this.getDistinctValues(this._dataSet, filterCol1Field.name);
+        filterColumns.push({
+          name: customFilterLabel1 || filterCol1Field.displayName,
+          fieldName: filterCol1Field.name,
+          distinctValues: distinctValues,
+        });
+      }
+      if (filterCol2Field) {
+        const distinctValues = this.getDistinctValues(this._dataSet, filterCol2Field.name);
+        filterColumns.push({
+          name: customFilterLabel2 || filterCol2Field.displayName,
+          fieldName: filterCol2Field.name,
+          distinctValues: distinctValues,
+        });
+      }
+      if (filterCol3Field) {
+        const distinctValues = this.getDistinctValues(this._dataSet, filterCol3Field.name);
+        filterColumns.push({
+          name: customFilterLabel3 || filterCol3Field.displayName,
+          fieldName: filterCol3Field.name,
+          distinctValues: distinctValues,
+        });
+      }
+      
       //create gantt
       const gantt = React.createElement(UniversalGantt, {
         context,
@@ -160,6 +216,8 @@ export class UniversalGanttChartComponent
         columnWidthDay,
         columnWidthWeek,
         columnWidthMonth,
+        additionalColumns: additionalColumns,
+        filterColumns: filterColumns,
         onViewChange: this.handleViewModeChange,
         onExpanderStateChange: this.handleExpanderStateChange,
       });
@@ -250,7 +308,7 @@ export class UniversalGanttChartComponent
             task.hideChildren = this._projects[taskId];
           }
         }
-        if (parentRecord) {
+        if (parentRecord && parentRecord.id) {
           const parentRecordId = parentRecord.id.guid;
           const parentRecordRef = dataset.records[parentRecordId];
           if (parentRecordRef) {
@@ -351,6 +409,28 @@ export class UniversalGanttChartComponent
     this._dataSet.refresh();
   }
 
+  private getDistinctValues(
+    dataset: ComponentFramework.PropertyTypes.DataSet,
+    fieldName: string
+  ): Array<{ label: string; value: string }> {
+    const distinctValues = new Map<string, boolean>();
+    const results: Array<{ label: string; value: string }> = [];
+
+    for (const recordId of dataset.sortedRecordIds) {
+      const record = dataset.records[recordId];
+      const value = record.getValue(fieldName);
+      if (value && !distinctValues.has(String(value))) {
+        distinctValues.set(String(value), true);
+        results.push({
+          label: String(value),
+          value: String(value),
+        });
+      }
+    }
+
+    return results.sort((a, b) => a.label.localeCompare(b.label));
+  }
+
   private async getLocalCode(context: ComponentFramework.Context<IInputs>) {
     try {
       const languages = await context.webAPI.retrieveMultipleRecords(
@@ -362,11 +442,8 @@ export class UniversalGanttChartComponent
         return code;
       }
     } catch (e) {
-      if (isErrorDialogOptions(e)) {
-        context.navigation.openErrorDialog(e);
-      } else {
-        console.error(e);
-      }
+      // Silently fail for demo environments that don't support retrieveMultipleRecords
+      // Return default language instead
     }
 
     return "en"; // English
