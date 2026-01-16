@@ -100,10 +100,12 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
-      // Update local state immediately to reflect the change in the UI
+      // Update local state immediately for the dragged task to show change instantly
       setFilteredTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === task.id ? task : t))
       );
+      // Refresh dataset - this will pick up any cascading plugin changes
+      context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -112,7 +114,6 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
@@ -126,10 +127,12 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
-      // Update local state immediately to reflect the change in the UI
+      // Update local state immediately for the updated task to show change instantly
       setFilteredTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === task.id ? task : t))
       );
+      // Refresh dataset to pick up any plugin changes
+      context.parameters.entityDataSet.refresh();
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -138,7 +141,6 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
