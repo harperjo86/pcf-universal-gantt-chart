@@ -100,8 +100,7 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
-      // Small delay to ensure Dataverse fully persists the update before refresh
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      console.log("Date update successful for task:", task.id);
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -110,7 +109,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    context.parameters.entityDataSet.refresh();
+    // Don't refresh - let the record change event trigger the update
+    // context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
@@ -124,8 +124,7 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
-      // Small delay to ensure Dataverse fully persists the update before refresh
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      console.log("Progress update successful for task:", task.id);
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -134,7 +133,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    context.parameters.entityDataSet.refresh();
+    // Don't refresh - let the record change event trigger the update
+    // context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
