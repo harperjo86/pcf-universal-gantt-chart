@@ -100,6 +100,10 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
+      // Update local state immediately to reflect the change in the UI
+      setFilteredTasks((prevTasks) =>
+        prevTasks.map((t) => (t.id === task.id ? task : t))
+      );
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -122,6 +126,10 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
+      // Update local state immediately to reflect the change in the UI
+      setFilteredTasks((prevTasks) =>
+        prevTasks.map((t) => (t.id === task.id ? task : t))
+      );
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
