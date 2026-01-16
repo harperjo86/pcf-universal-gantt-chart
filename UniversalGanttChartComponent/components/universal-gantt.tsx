@@ -100,6 +100,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
           task.start.getTime() - props.crmUserTimeOffset * 60000
         ),
       });
+      // Small delay to ensure Dataverse fully persists the update before refresh
+      await new Promise((resolve) => setTimeout(resolve, 300));
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
@@ -122,6 +124,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       await context.webAPI.updateRecord(entityName, task.id, {
         [props.progressFieldName]: task.progress,
       });
+      // Small delay to ensure Dataverse fully persists the update before refresh
+      await new Promise((resolve) => setTimeout(resolve, 300));
     } catch (e) {
       if (isErrorDialogOptions(e)) {
         context.navigation.openErrorDialog(e);
