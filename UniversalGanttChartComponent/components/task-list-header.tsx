@@ -57,21 +57,6 @@ export const createHeaderLocal = (
           >
             &nbsp;{startDisplayName}
           </div>
-          <div
-            className="Gantt-Table_Header-Separator"
-            style={{
-              height: headerHeight * 0.5,
-              marginTop: headerHeight * 0.25,
-            }}
-          />
-          <div
-            className="Gantt-Table_Header-Item"
-            style={{
-              minWidth: rowWidth,
-            }}
-          >
-            &nbsp;{endDisplayName}
-          </div>
           {/**
            * Additional Column Headers
            */}

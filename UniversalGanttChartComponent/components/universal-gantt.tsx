@@ -109,8 +109,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    // Don't refresh - let the record change event trigger the update
-    // context.parameters.entityDataSet.refresh();
+    // Refresh dataset to trigger updateView and ensure UI reflects the Dataverse change
+    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 
@@ -133,8 +133,8 @@ export const UniversalGantt: React.FunctionComponent<UniversalGanttProps> = (
       }
       resultState = false;
     }
-    // Don't refresh - let the record change event trigger the update
-    // context.parameters.entityDataSet.refresh();
+    // Refresh dataset to trigger updateView and ensure UI reflects the Dataverse change
+    context.parameters.entityDataSet.refresh();
     return resultState;
   };
 

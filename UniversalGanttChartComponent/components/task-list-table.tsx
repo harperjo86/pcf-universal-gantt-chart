@@ -51,8 +51,10 @@ export const createTaskListLocal = (
             const record = dataset.records[t.id];
             if (record) {
               additionalColumns.forEach((col) => {
-                const value = record.getValue(col.fieldName);
-                additionalValues[col.fieldName] = value ? String(value) : "";
+                const formattedValue = record.getFormattedValue(col.fieldName);
+                const rawValue = record.getValue(col.fieldName);
+                additionalValues[col.fieldName] =
+                  formattedValue ?? (rawValue !== null && rawValue !== undefined ? String(rawValue) : "");
               });
             }
           }
@@ -124,19 +126,6 @@ export const createTaskListLocal = (
                 title={formatDateShort(t.start, includeTime)}
               >
                 &nbsp;{formatDateShort(t.start, includeTime)}
-              </div>
-              {/**
-               * End Time
-               */}
-              <div
-                className="Gantt-Task-List_Cell"
-                style={{
-                  minWidth: rowWidth,
-                  maxWidth: rowWidth,
-                }}
-                title={formatDateShort(t.end, includeTime)}
-              >
-                &nbsp;{formatDateShort(t.end, includeTime)}
               </div>
               {/**
                * Additional Columns

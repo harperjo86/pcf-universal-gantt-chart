@@ -93,6 +93,28 @@ export class UniversalGanttChartComponent
         !!progressField
       );
 
+      const paddingMonths = context.parameters.timelinePaddingMonths?.raw || 0;
+      if (paddingMonths > 0 && tasks.length > 0) {
+        const maxEnd = tasks.reduce((latest, task) =>
+          task.end > latest ? task.end : latest, tasks[0].end);
+        const paddingEnd = this.addMonths(maxEnd, paddingMonths);
+        tasks.push({
+          id: "__timeline_padding__",
+          name: "",
+          start: paddingEnd,
+          end: paddingEnd,
+          progress: 0,
+          type: "milestone",
+          isDisabled: true,
+          styles: {
+            backgroundColor: "transparent",
+            backgroundSelectedColor: "transparent",
+            progressColor: "transparent",
+            progressSelectedColor: "transparent",
+          },
+        });
+      }
+
       if (!this._locale) {
         this._locale = await this.getLocalCode(context);
       }
@@ -152,10 +174,59 @@ export class UniversalGanttChartComponent
       const col1Field = columns.find((c) => c.alias === this._column1Str);
       const col2Field = columns.find((c) => c.alias === this._column2Str);
       const col3Field = columns.find((c) => c.alias === this._column3Str);
-      
-      if (col1Field) additionalColumns.push({ name: customColumnHeader1 || col1Field.displayName, fieldName: col1Field.name });
-      if (col2Field) additionalColumns.push({ name: customColumnHeader2 || col2Field.displayName, fieldName: col2Field.name });
-      if (col3Field) additionalColumns.push({ name: customColumnHeader3 || col3Field.displayName, fieldName: col3Field.name });
+
+      if (col1Field) {
+        additionalColumns.push({
+          name: customColumnHeader1 || col1Field.displayName,
+          fieldName: col1Field.name,
+        });
+      }
+      if (col2Field) {
+        additionalColumns.push({
+          name: customColumnHeader2 || col2Field.displayName,
+          fieldName: col2Field.name,
+        });
+      }
+      if (col3Field) {
+        additionalColumns.push({
+          name: customColumnHeader3 || col3Field.displayName,
+          fieldName: col3Field.name,
+        });
+      }
+
+      if (additionalColumns.length === 0) {
+        const defaultAdditionalColumns: Array<{
+          fieldName: string;
+          header: string;
+          customHeader: string;
+        }> = [
+          {
+            fieldName: "dct_mpasset",
+            header: "AssetNum",
+            customHeader: customColumnHeader1,
+          },
+          {
+            fieldName: "dct_mrtitle",
+            header: "MaintWorkRule",
+            customHeader: customColumnHeader2,
+          },
+          {
+            fieldName: "dct_assetlocation",
+            header: "Location",
+            customHeader: customColumnHeader3,
+          },
+        ];
+
+        defaultAdditionalColumns.forEach((def) => {
+          const field = columns.find((c) => c.name === def.fieldName);
+          if (field) {
+            additionalColumns.push({
+              name: def.customHeader || def.header || field.displayName,
+              fieldName: field.name,
+            });
+          }
+        });
+      }
 
       // Build filter columns array with distinct values
       const filterColumns: Array<{ name: string; fieldName: string; distinctValues: Array<{ label: string; value: string }> }> = [];
@@ -447,6 +518,12 @@ export class UniversalGanttChartComponent
     }
 
     return "en"; // English
+  }
+
+  private addMonths(date: Date, months: number): Date {
+    const result = new Date(date.getTime());
+    result.setMonth(result.getMonth() + months);
+    return result;
   }
   /**
    * It is called by the framework prior to a control receiving new data.
